@@ -578,4 +578,59 @@ describe 'upload release', type: :integration do
       }
     end
   end
+
+  describe 'uploading release with --fix v2' do
+    it 'fixes packages in blobstore that are broken or missing' do
+      target_and_login
+
+      Dir.chdir(ClientSandbox.test_release_dir) do
+        bosh_runner.run_in_current_dir('create release')
+        bosh_runner.run_in_current_dir('upload release')
+      end
+
+      bosh_runner.run("upload stemcell #{spec_asset('valid_stemcell.tgz')}")
+
+      cloud_config_manifest = yaml_file('cloud_manifest', Bosh::Spec::Deployments.simple_cloud_config)
+      bosh_runner.run("update cloud-config #{cloud_config_manifest.path}")
+
+      deployment_manifest = yaml_file('deployment_manifest', Bosh::Spec::Deployments.simple_manifest)
+      bosh_runner.run("deployment #{deployment_manifest.path}")
+
+      inspect1 = bosh_runner.run('inspect release bosh-release/0+dev.1')
+      old_pkg_inspect = Bosh::Dev::TableParser.new(inspect1.split(/\n\n/)[1]).to_a
+      puts "##########################", inspect1
+
+      expect(bosh_runner.run('deploy')).to match /Deployed.*to.*/
+
+      FileUtils.rm_rf(Dir.glob(File.join(current_sandbox.blobstore_storage_dir, "*")))
+
+      Dir.chdir(ClientSandbox.test_release_dir) do
+        out = bosh_runner.run_in_current_dir('upload release --fix')
+        puts "#########################", out
+        expect(out).to match /Started fixing package \'a.*Done/
+        expect(out).to match /Started fixing package \'b.*Done/
+        expect(out).to match /Started fixing package \'c.*Done/
+        expect(out).to match /Started fixing package \'foo.*Done/
+        expect(out).to match /Started fixing package \'bar.*Done/
+        expect(out).to match /Started fixing package \'blocking_package.*Done/
+        expect(out).to match /Started fixing package \'errand1.*Done/
+        expect(out).to match /Started fixing package \'fails_with_too_much_output.*Done/
+      end
+
+      inspect2 = bosh_runner.run('inspect release bosh-release/0+dev.1')
+      puts "#########################", inspect2
+      new_pkg_inspect = Bosh::Dev::TableParser.new(inspect2.split(/\n\n/)[1]).to_a
+      new_pkg_inspect.each { |new_pkg|
+        old_pkg_inspect.each { |old_pkg|
+          if new_pkg[:package] == old_pkg[:package]
+            expect(new_pkg[:blobstore_id]).to_not eq(old_pkg[:blobstore_id])
+            break
+          end
+        }
+      }
+
+      expect(bosh_runner.run('deploy')).to match /Deployed.*to.*/
+    end
+  end
+
 end

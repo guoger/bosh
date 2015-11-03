@@ -492,6 +492,7 @@ module Bosh::Director
         if @fix
           if package.blobstore_id != nil
             logger.info("Verifying package #{desc} with blobstore_id: #{package.blobstore_id}")
+            fix_compiled_packages package
             return false if BlobUtil.verify_blob(package.blobstore_id, package.sha1)
             validate_tgz(package_tgz, desc)
             fix_package(package, package_tgz)
@@ -502,6 +503,7 @@ module Bosh::Director
           if existing_blob
             pkg = Models::Package.where(blobstore_id: existing_blob).first
             logger.info("Verifying package #{desc} with blobstore_id: #{existing_blob}")
+            fix_compiled_packages package
             fix_package(pkg, package_tgz) unless BlobUtil.verify_blob(existing_blob, sha1)
             package.blobstore_id = BlobUtil.copy_blob(pkg.blobstore_id)
             return true
@@ -642,6 +644,17 @@ module Bosh::Director
         single_step_stage("Fixing package '#{package.name}/#{package.version}'") do
           logger.info("Fixing package '#{package.name}/#{package.version}'")
           package.blobstore_id = BlobUtil.replace_blob(package.blobstore_id, package_tgz)
+        end
+      end
+
+      def fix_compiled_packages(package)
+        package.compiled_packages.each do |compiled_pkg|
+          unless BlobUtil.verify_blob(compiled_pkg.blobstore_id, compiled_pkg.sha1)
+            logger.info("Deleting compiled package '#{package.name}/#{package.version}' \
+for '#{compiled_pkg.stemcell.name}/#{compiled_pkg.stemcell.version}' with blobstore_id '#{compiled_pkg.blobstore_id}'")
+            BlobUtil.delete_blob(compiled_pkg.blobstore_id)
+            compiled_pkg.destroy
+          end
         end
       end
     end
