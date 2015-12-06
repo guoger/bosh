@@ -64,7 +64,9 @@ module Bosh
           @logger.info('Creating deployment plan')
           @logger.info("Deployment plan options: #{plan_options}")
 
+          # deployment is a planner obj which encapsulates essential director data structures
           deployment = Planner.new(attrs, deployment_manifest, cloud_config, deployment_model, plan_options)
+          # ASK global_network_resolver to convert from legacy deployment manifest
           global_network_resolver = GlobalNetworkResolver.new(deployment)
 
           deployment.cloud_planner = CloudManifestParser.new(@logger).parse(cloud_manifest, global_network_resolver)
