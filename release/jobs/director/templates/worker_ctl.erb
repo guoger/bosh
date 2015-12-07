@@ -7,13 +7,16 @@ LOG_DIR=/var/vcap/sys/log/director
 PIDFILE=$RUN_DIR/worker_$INDEX.pid
 RUNAS=vcap
 
+# include the director bin folder
+PATH=/var/vcap/jobs/director/bin:$PATH
+
 # Postgres
 PATH=/var/vcap/packages/postgres/bin:$PATH
 LD_LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LD_LIBRARY_PATH
 
 # MySQL
-PATH=/var/vcap/packages/mysql/bin:$PATH
-LD_LIBRARY_PATH=/var/vcap/packages/mysql/lib/mysql:$LD_LIBRARY_PATH
+PATH=/opt/mysql/bin:$PATH
+LD_LIBRARY_PATH=/opt/mysql/lib/mysql:$LD_LIBRARY_PATH
 
 
 PATH=/var/vcap/packages/ruby/bin:/var/vcap/packages/genisoimage:$PATH

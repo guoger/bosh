@@ -132,6 +132,7 @@ require 'bosh/director/jobs/cloud_check/apply_resolutions'
 require 'bosh/director/jobs/release/release_job'
 require 'bosh/director/jobs/ssh'
 require 'bosh/director/jobs/helpers'
+require 'bosh/director/jobs/restore_db'
 
 require 'bosh/director/models/helpers/model_helper'
 
@@ -163,4 +164,5 @@ require 'bosh/director/api/controllers/task_controller'
 require 'bosh/director/api/controllers/users_controller'
 require 'bosh/director/api/controllers/cloud_configs_controller'
 require 'bosh/director/api/controllers/locks_controller'
+require 'bosh/director/api/controllers/restore_controller'
 require 'bosh/director/api/route_configuration'
