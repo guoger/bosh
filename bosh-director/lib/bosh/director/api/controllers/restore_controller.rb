@@ -4,7 +4,7 @@ module Bosh::Director
   module Api::Controllers
     class RestoreController < BaseController
       post '/', :consumes => :multipart do
-        @restore_manager.restore_db(current_user, params[:nginx_upload_path])
+        @restore_manager.restore_db(params[:nginx_upload_path])
 
         status 202
       end

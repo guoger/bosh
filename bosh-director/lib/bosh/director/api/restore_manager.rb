@@ -6,7 +6,7 @@ module Bosh::Director
         @db_config = Config.db_config
       end
 
-      def restore_db(username, path)
+      def restore_db(path)
         @logger.debug("Restoring database from db_dump file: #{path}...")
 
         db_name = @db_config.fetch('database')
